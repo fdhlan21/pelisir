@@ -1,0 +1,117 @@
+import {View, Text, ScrollView, Image, TouchableOpacity} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import { apiURL, webURL } from '../utils/localStorage';
+import MyHeader from '../components/MyHeader';
+import { useIsFocused } from '@react-navigation/native';
+import FastImage from 'react-native-fast-image';
+import { colors } from '../utils/colors';
+import { fonts } from '../utils/fonts';
+import axios from 'axios';
+
+
+
+export default function Artikel({navigation}) {
+  // Data artikel dalam bentuk array dengan konten lengkap
+  const [artikelData, setData] = useState([]);
+
+  // Fungsi untuk handle navigasi ke detail artikel
+  const handleArtikelPress = artikel => {
+    navigation.navigate('ArtikelDetail', {
+      artikel,
+      title: artikel.title,
+    });
+  };
+
+  const getTransaksi = () => {
+    try {
+      setLoading(true);
+      axios
+        .post(apiURL + 'listdata', {
+          modul: 'artikel',
+        })
+        .then(res => {
+          console.log(res.data);
+          setData(res.data);
+        });
+    } catch (error) {
+      console.log(error);
+      setLoading(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+  const isFocused = useIsFocused();
+
+  useEffect(() => {
+    if (isFocused) {
+      getTransaksi();
+    }
+  }, [isFocused]);
+  const [loading, setLoading] = useState(false);
+
+  return (
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: colors.white,
+      }}>
+      <MyHeader title="Artikel" />
+
+      <ScrollView>
+        <View style={{padding: 20}}>
+          {/* List Artikel menggunakan map */}
+          {artikelData.map(artikel => (
+            <TouchableOpacity
+              key={artikel.id}
+              style={{marginBottom: 20}}
+              onPress={() => {
+                handleArtikelPress(artikel);
+                // Linking.openURL(webURL + artikel.foto);
+              }}
+              activeOpacity={0.7}>
+              <View
+                style={{
+                  // padding: 20,
+                  borderWidth: 1,
+                  borderColor: colors.blueGray[300],
+                  borderRadius: 20,
+                  backgroundColor: colors.white,
+                  // height: 250,
+                }}>
+                <View>
+                  <FastImage
+                    style={{
+                      width: '100%',
+                      height: 180,
+                      borderRadius: 10,
+                    }}
+                    resizeMode={FastImage.resizeMode.contain}
+                    source={{
+                      uri: webURL + artikel.foto,
+                    }}
+                  />
+                </View>
+
+                <View
+                  style={{
+                    padding: 10,
+                  }}>
+                  <Text
+                    style={{
+                      fontFamily: fonts.secondary[600],
+                      color: colors.primary,
+                      textAlign: 'left',
+                      fontSize: 13,
+                      marginTop: 20,
+                    }}>
+                    {artikel.judul}
+                  </Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </ScrollView>
+    </View>
+  );
+}
